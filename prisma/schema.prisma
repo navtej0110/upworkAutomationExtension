@@ -4,17 +4,17 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
 }
 
 model Profile {
   id         String   @id @default(cuid())
   name       String
   title      String
-  skills     String   @db.Text // comma-separated
+  skills     String
   hourlyRate Float?
-  bio        String?  @db.Text
-  experience String?  @db.Text
+  bio        String?
+  experience String?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 }
@@ -22,15 +22,15 @@ model Profile {
 model Job {
   id              String   @id @default(cuid())
   upworkId        String   @unique
-  title           String   @db.VarChar(500)
-  description     String   @db.Text
+  title           String
+  description     String
   category        String?
   budget          String?
-  link            String   @db.VarChar(1000)
+  link            String
   publishedAt     DateTime?
-  skills          String?  @db.Text
+  skills          String?
   matchScore      Float?
-  matchReason     String?  @db.Text
+  matchReason     String?
   status          String   @default("new")
   proposals       String?
   jobType         String?

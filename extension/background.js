@@ -57,13 +57,18 @@ function extractJobsScript() {
 
     seen.add(link);
 
-    // Walk UP from the link to find the job tile container
-    // Keep going up until we find a large enough container (has description, skills, etc.)
+    // Find the job tile container — look for the nearest parent that is a direct child of the job-tile-list
     let container = a.parentElement;
-    for (let i = 0; i < 10 && container; i++) {
-      // A good container should have a decent amount of text (job description, skills, etc.)
-      if (container.textContent && container.textContent.length > 200) break;
+    while (container && container.parentElement !== jobContainer) {
       container = container.parentElement;
+    }
+    // Fallback: if we couldn't find a direct child, walk up to a reasonable container
+    if (!container) {
+      container = a.parentElement;
+      for (let i = 0; i < 6 && container; i++) {
+        if (container.textContent && container.textContent.length > 200) break;
+        container = container.parentElement;
+      }
     }
 
     let description = "";
@@ -81,18 +86,28 @@ function extractJobsScript() {
     if (container) {
       const text = container.textContent || "";
 
-      // DESCRIPTION — use data-test attributes
+      // DESCRIPTION — use data-test attributes first
       const descEl = container.querySelector('[data-test="job-description-text"]') ||
         container.querySelector('[data-test="job-description-line-clamp"]');
       if (descEl) description = descEl.textContent?.trim() || "";
-      // Fallback: longest text block
+      // Fallback: longest text block that's NOT feedback/UI text
+      const feedbackWords = ["not interested", "vague description", "unrealistic expectations", "too many applicants", "overqualified", "budget too low", "feedback helps", "doesn't match skills", "poor reviews"];
       if (!description) {
         container.querySelectorAll("p, span, div").forEach((el) => {
           const t = el.textContent?.trim() || "";
           if (t.length > 80 && t.length < 2000 && t.length > description.length && t !== title && el.children.length < 5) {
-            description = t;
+            const lower = t.toLowerCase();
+            const isFeedback = feedbackWords.some((w) => lower.includes(w));
+            if (!isFeedback) description = t;
           }
         });
+      }
+      // Clean: remove feedback text if it leaked into description
+      if (description) {
+        const feedbackIdx = description.toLowerCase().indexOf("job feedback");
+        if (feedbackIdx > 0) description = description.substring(0, feedbackIdx).trim();
+        const justNotIdx = description.toLowerCase().indexOf("just not interested");
+        if (justNotIdx > 0) description = description.substring(0, justNotIdx).trim();
       }
 
       // BUDGET — data-test="budget" or formatted-amount
@@ -107,11 +122,12 @@ function extractJobsScript() {
       }
 
       // SKILLS — token-container children or attr-item
+      const skipSkills = ["previous skills", "next skills", "update list", "previous skills. update list", "next skills. update list"];
       const tokenContainer = container.querySelector('[data-test="token-container"]');
       if (tokenContainer) {
         tokenContainer.querySelectorAll('a, span').forEach((t) => {
           const s = t.textContent?.trim() || "";
-          if (s.length > 1 && s.length < 40 && !skills.includes(s) && !s.includes("search")) {
+          if (s.length > 1 && s.length < 40 && !skills.includes(s) && !s.includes("search") && !skipSkills.includes(s.toLowerCase())) {
             skills.push(s);
           }
         });
@@ -119,7 +135,7 @@ function extractJobsScript() {
       if (skills.length === 0) {
         container.querySelectorAll('[data-test="attr-item"], [data-test="token"]').forEach((t) => {
           const s = t.textContent?.trim() || "";
-          if (s.length > 1 && s.length < 40 && !skills.includes(s)) skills.push(s);
+          if (s.length > 1 && s.length < 40 && !skills.includes(s) && !skipSkills.includes(s.toLowerCase())) skills.push(s);
         });
       }
 
