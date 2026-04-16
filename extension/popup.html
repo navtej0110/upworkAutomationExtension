@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { width: 340px; padding: 16px; font-family: system-ui, sans-serif; font-size: 14px; }
+    h2 { margin: 0 0 12px; font-size: 16px; }
+    button { width: 100%; padding: 10px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; margin-bottom: 8px; }
+    .scrape-btn { background: #18181b; color: white; }
+    .scrape-btn:hover { background: #27272a; }
+    .scrape-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .label { font-size: 12px; color: #71717a; margin-bottom: 4px; margin-top: 8px; }
+    select, input { width: 100%; padding: 8px; border: 1px solid #e4e4e7; border-radius: 6px; margin-bottom: 8px; font-size: 13px; box-sizing: border-box; }
+    .row { display: flex; gap: 8px; }
+    .row > * { flex: 1; }
+    .checkbox-row { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; font-size: 13px; color: #3f3f46; }
+    .checkbox-row input { width: auto; margin: 0; }
+    .divider { border: none; border-top: 1px solid #e4e4e7; margin: 10px 0; }
+
+    /* Skills panel */
+    .skills-panel { border: 1px solid #e4e4e7; border-radius: 8px; margin-bottom: 8px; overflow: hidden; }
+    .skills-header { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; background: #fafafa; cursor: pointer; user-select: none; }
+    .skills-header span { font-size: 13px; font-weight: 600; color: #18181b; }
+    .skills-count { font-size: 11px; color: #71717a; font-weight: 400; }
+    .skills-arrow { font-size: 12px; color: #71717a; transition: transform 0.2s; }
+    .skills-arrow.open { transform: rotate(180deg); }
+    .skills-body { display: none; border-top: 1px solid #e4e4e7; }
+    .skills-body.open { display: block; }
+    .skills-list { max-height: 180px; overflow-y: auto; padding: 6px 8px; }
+    .skill-item { display: flex; align-items: center; gap: 6px; padding: 3px 0; font-size: 13px; }
+    .skill-item input { width: auto; margin: 0; }
+    .skill-item label { flex: 1; cursor: pointer; }
+    .skill-item .remove-btn { background: none; border: none; color: #ef4444; cursor: pointer; font-size: 16px; padding: 0 4px; width: auto; margin: 0; line-height: 1; }
+    .skill-item .remove-btn:hover { color: #dc2626; }
+    .skills-footer { border-top: 1px solid #e4e4e7; padding: 6px 8px; background: #fafafa; }
+    .skills-actions { display: flex; gap: 10px; margin-bottom: 6px; font-size: 11px; }
+    .skills-actions a { color: #3b82f6; cursor: pointer; text-decoration: none; }
+    .skills-actions a:hover { text-decoration: underline; }
+    .add-skill-row { display: flex; gap: 6px; }
+    .add-skill-row input { flex: 1; margin: 0; padding: 6px 8px; font-size: 12px; }
+    .add-skill-row button { width: auto; padding: 6px 10px; margin: 0; font-size: 12px; white-space: nowrap; background: #16a34a; color: white; border-radius: 6px; }
+    .add-skill-row button:hover { background: #15803d; }
+
+    #log { max-height: 250px; overflow-y: auto; font-size: 12px; display: none; }
+    #log.show { display: block; }
+    .log-entry { padding: 4px 8px; border-radius: 4px; margin-bottom: 2px; }
+    .log-entry.searching { background: #fef3c7; color: #92400e; }
+    .log-entry.done { background: #dcfce7; color: #166534; }
+    .log-entry.error { background: #fee2e2; color: #991b1b; }
+    .log-entry.info { background: #f0f9ff; color: #075985; }
+    .summary { padding: 10px; border-radius: 8px; background: #18181b; color: white; font-weight: 600; margin-top: 8px; text-align: center; display: none; }
+    .summary.show { display: block; }
+    .total-badge { font-size: 20px; display: block; margin-bottom: 4px; }
+  </style>
+</head>
+<body>
+  <h2>Upwork Scraper</h2>
+
+  <div class="label">Skills to search:</div>
+  <div class="skills-panel">
+    <div class="skills-header" id="skillsToggle">
+      <span>Select Skills <span class="skills-count" id="skillsCount">(0 selected)</span></span>
+      <span class="skills-arrow" id="skillsArrow">↓</span>
+    </div>
+    <div class="skills-body" id="skillsBody">
+      <div class="skills-list" id="skillsBox"></div>
+      <div class="skills-footer">
+        <div class="skills-actions">
+          <a id="selectAll">Select all</a>
+          <a id="selectNone">Deselect all</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="label">Posted within:</div>
+  <select id="postedWithin">
+    <option value="">Any time</option>
+    <option value="1" selected>Last 24 hours</option>
+    <option value="3">Last 3 days</option>
+    <option value="7">Last week</option>
+    <option value="14">Last 2 weeks</option>
+  </select>
+
+  <div class="label">Job type:</div>
+  <select id="jobType">
+    <option value="" selected>All types</option>
+    <option value="1">Fixed price only</option>
+    <option value="0">Hourly only</option>
+  </select>
+
+  <div class="label">Experience level:</div>
+  <select id="experience">
+    <option value="" selected>Any level</option>
+    <option value="1">Entry level</option>
+    <option value="2">Intermediate</option>
+    <option value="3">Expert</option>
+    <option value="2,3">Intermediate + Expert</option>
+  </select>
+
+  <div class="label">Client budget ($):</div>
+  <div class="row">
+    <input type="number" id="budgetMin" placeholder="Min" />
+    <input type="number" id="budgetMax" placeholder="Max" />
+  </div>
+
+  <label class="checkbox-row">
+    <input type="checkbox" id="paymentVerified" checked />
+    Payment verified clients only
+  </label>
+
+  <label class="checkbox-row">
+    <input type="checkbox" id="clientHires" />
+    Clients with hire history only
+  </label>
+
+  <hr class="divider" />
+
+  <button class="scrape-btn" id="scrapeBtn">Scrape Jobs Now</button>
+
+  <div id="log"></div>
+  <div class="summary" id="summary">
+    <span class="total-badge" id="totalCount">0</span>
+    <span id="summaryText">jobs sent to dashboard</span>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

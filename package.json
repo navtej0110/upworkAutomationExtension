@@ -9,9 +9,18 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.82.0",
+    "@prisma/adapter-mariadb": "^7.7.0",
+    "@prisma/client": "^7.6.0",
+    "@types/better-sqlite3": "^7.6.13",
+    "date-fns": "^4.1.0",
+    "lucide-react": "^1.7.0",
+    "mariadb": "^3.5.2",
     "next": "16.2.2",
+    "prisma": "^7.6.0",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "rss-parser": "^3.13.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

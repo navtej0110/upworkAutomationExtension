@@ -1,0 +1,45 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model Profile {
+  id         String   @id @default(cuid())
+  name       String
+  title      String
+  skills     String   @db.Text // comma-separated
+  hourlyRate Float?
+  bio        String?  @db.Text
+  experience String?  @db.Text
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Job {
+  id              String   @id @default(cuid())
+  upworkId        String   @unique
+  title           String   @db.VarChar(500)
+  description     String   @db.Text
+  category        String?
+  budget          String?
+  link            String   @db.VarChar(1000)
+  publishedAt     DateTime?
+  skills          String?  @db.Text
+  matchScore      Float?
+  matchReason     String?  @db.Text
+  status          String   @default("new")
+  proposals       String?
+  jobType         String?
+  experienceLevel String?
+  duration        String?
+  weeklyHours     String?
+  clientCountry   String?
+  clientSpent     String?
+  clientVerified  Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
